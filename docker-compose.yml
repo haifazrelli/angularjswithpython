@@ -1,0 +1,80 @@
+version: '3'
+services:
+  backend:
+    container_name: backend-python-container
+    build: 
+      context: ./python
+    ports:
+      - "5000:5000"
+    depends_on:
+    - mysqldb
+    - elasticsearch
+    networks:
+      - elastic
+      - angularnet
+      - mysqlnet  
+
+  frontend :
+    container_name: angularjs-container
+    build: ./angularjs
+    ports:
+      - 80:80
+    depends_on:
+      - backend
+    networks:
+      - angularnet
+  
+  mysqldb:
+    container_name: mysqldb-container
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: userstlist
+      MYSQL_PASSWORD: ''
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+    ports:
+      - '3306:3306'
+    networks:
+      - mysqlnet
+    volumes:
+      - ./userstlist.sql:/docker-entrypoint-initdb.d/0_init.sql
+      - mysqldb:/var/lib/mysql
+
+  elasticsearch:
+    container_name: elasticsearch01
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.1
+    environment:
+      - node.name=elasticsearch01
+      - cluster.name=es-docker-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - elastic
+
+networks:
+  mysqlnet:
+    driver: bridge
+  elastic:
+    driver: bridge
+  angularnet:
+    driver: bridge
+
+volumes:
+  certs:
+    driver: local
+  es-data:
+    driver: local
+  mysqldb:
+    driver: local
+  
+  
+  

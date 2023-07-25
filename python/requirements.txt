@@ -1,0 +1,7 @@
+Flask
+elasticsearch
+Flask-Cors
+mysql-connector-python
+Flask-MySQL
+pymysql
+werkzeug

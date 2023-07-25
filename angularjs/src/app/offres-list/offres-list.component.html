@@ -1,0 +1,20 @@
+<h3>Les offres </h3>
+<div>
+	<a routerLink="/add">
+		Add New Offer
+	</a>
+</div>
+<table>
+  <tr>
+    <th>titre </th>
+    <th>nom entreprise </th>
+	<th>lien</th>
+  </tr>
+  <tr *ngFor="let offre of offers">
+    <td>{{offre.titre}}</td>
+    <td>{{offre.lien}}</td>
+	<td>
+				<button title="delete user" (click)="deleteOffer(offre)">x</button>
+	</td>
+  </tr>
+</table>
