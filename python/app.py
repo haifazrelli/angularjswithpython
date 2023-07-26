@@ -1,10 +1,12 @@
+import os
 from flask import Flask , render_template
 from flask_cors import CORS, cross_origin
 import pymysql
-import mysql.connector
+import mysql.connector  
+from mysql.connector import Error 
 import json 
 from flask import jsonify
-from flask import flash, request
+from flask import  request
 from werkzeug.security import generate_password_hash, check_password_hash
 from elasticsearch import Elasticsearch , helpers
 
@@ -12,22 +14,24 @@ app = Flask(__name__)
 app.secret_key = "secret key"
 
 CORS(app)
-app.config['MYSQL_DATABASE_USER'] = 'root'
+""" app.config['MYSQL_DATABASE_USER'] = 'root'
 app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'userstlist'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
-
+ """
 try: 
     connection = mysql.connector.connect(
-        user='root', 
-        password='', 
-        database='userstlist',
-        host='mysqldb-container', 
-        port=3306
-    )
+        user=os.getenv("MYSQL_USER"), 
+        password=os.getenv("MYSQL_PASSWORD"), 
+        host=os.getenv("MYSQL_HOST"),
+	    database=os.getenv("MYSQL_DATABASE"),
+	    port="3306"
+        )
+    print("DB connected")
+
 ## connection=mysql.connect()
 except Exception as e :
-    print('error while connecting to mysql :: ',e)
+    print('error while connecting to mysql : * ',e)
 
 @app.route('/')
 def users1():
@@ -164,7 +168,7 @@ def not_found(error=None):
     return resp
 url = 'http://localhost:9200'
 
-es = Elasticsearch(url)
+es = Elasticsearch(os.getenv("ELASTIC_URL"))
 print(es.ping)
 INDEX_NAME="offre"
 def create_index(self) -> None:
