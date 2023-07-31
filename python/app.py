@@ -34,17 +34,13 @@ def connect():
 
 @app.route('/')
 def users1():
-	try:
-		connection = connect()
-		cursor = connection.cursor(pymysql.cursors.DictCursor)
-		record = cursor.fetchone()
-		print("id = {record[0]}, name= {record[1]} , email={record[2]}")
-		return record
 	
-	except Exception as err:
-		print(err)
-	cursor.close()
-	connection.close()
+	connection = connect()
+	cursor = connection.cursor(pymysql.cursors.DictCursor)
+	record = cursor.fetchone()
+	print("id = {record[0]}, name= {record[1]} , email={record[2]}")
+	return record
+	
 
 @app.route('/add', methods=['POST'])
 def add_user():
