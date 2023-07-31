@@ -34,13 +34,12 @@ def connect():
 
 @app.route('/')
 def users1():
-	
 	connection = connect()
 	cursor = connection.cursor(pymysql.cursors.DictCursor)
-	record = cursor.fetchone()
-	print("id = {record[0]}, name= {record[1]} , email={record[2]}")
-	return record
+	cursor.execute('SELECT * FROM tbl_user ')
+	users= cursor.fetchall()
 	
+	return users
 
 @app.route('/add', methods=['POST'])
 def add_user():
