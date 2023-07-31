@@ -19,28 +19,32 @@ app.config['MYSQL_DATABASE_PASSWORD'] = ''
 app.config['MYSQL_DATABASE_DB'] = 'userstlist'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
  """
-try: 
-    connection = mysql.connector.connect(
-        user=os.getenv("MYSQL_USER"), 
-        password=os.getenv("MYSQL_PASSWORD"), 
-        host=os.getenv("MYSQL_HOST"),
-	    database=os.getenv("MYSQL_DATABASE"),
-	    port="3306"
-        )
-    print("DB connected")
 
-## connection=mysql.connect()
-except Exception as e :
-    print('error while connecting to mysql : * ',e)
+def connect():
+	try:
+		conn = mysql.connector.connect(
+			user=os.getenv("MYSQL_USER"), 
+			password=os.getenv("MYSQL_PASSWORD"), 
+			host=os.getenv("MYSQL_HOST"),
+			database=os.getenv("MYSQL_DB")
+			)
+		return conn
+	except Exception as e :
+		print('error while connecting to mysql',e)
 
 @app.route('/')
 def users1():
-	cursor = connection.cursor()
-	cursor.execute('SELECT * FROM tbl_user ')
-	users= cursor.fetchall()
+	try:
+		connection = connect()
+		cursor = connection.cursor(pymysql.cursors.DictCursor)
+		record = cursor.fetchone()
+		print("id = {record[0]}, name= {record[1]} , email={record[2]}")
+		return record
+	
+	except Exception as err:
+		print(err)
+	cursor.close()
 	connection.close()
-	print(users)
-   
 
 @app.route('/add', methods=['POST'])
 def add_user():
@@ -58,6 +62,7 @@ def add_user():
 			# save edits
 			sql = "INSERT INTO tbl_user(user_name, user_email, user_password) VALUES(%s, %s, %s)"
 			data = (_name, _email, _hashed_password,)
+			connection=connect()
 			cursor = connection.cursor()
 			cursor.execute(sql, data)
 			connection.commit()
@@ -69,7 +74,7 @@ def add_user():
 	except Exception as e:
 		print(e)
 	finally:
-		cursor.close() 
+		cursor.close()
 		connection.close()
 		
 @app.route('/users')
@@ -77,8 +82,8 @@ def users():
 	connection = None
 	cursor = None
 	try:
-		
-		cursor = connection.cursor(pymysql.cursors.DictCursor)
+		connection=connect()
+		cursor = connection.cursor()
 		cursor.execute("SELECT user_id id, user_name name, user_email email, user_password pwd FROM tbl_user")
 		rows = cursor.fetchall()
 		resp = jsonify(rows)
@@ -89,12 +94,14 @@ def users():
 	finally:
 		cursor.close() 
 		connection.close()
+	
 		
 @app.route('/user/<int:id>')
 def user(id):
 	connection = None
 	cursor = None
 	try:
+		connection=connect()
 		cursor = connection.cursor(pymysql.cursors.DictCursor)
 		cursor.execute("SELECT user_id id, user_name name, user_email email, user_password pwd FROM tbl_user WHERE user_id=%s", id)
 		row = cursor.fetchone()
@@ -109,7 +116,7 @@ def user(id):
 
 @app.route('/update', methods=['PUT'])
 def update_user():
-	connection = None
+	connection = None 
 	cursor = None
 	try:
 		_json = request.json
@@ -124,7 +131,7 @@ def update_user():
 			# save edits
 			sql = "UPDATE tbl_user SET user_name=%s, user_email=%s, user_password=%s WHERE user_id=%s"
 			data = (_name, _email, _hashed_password, _id,)
-			
+			connection=connect()
 			cursor = connection.cursor()
 			cursor.execute(sql, data)
 			connection.commit()
@@ -141,9 +148,10 @@ def update_user():
 		
 @app.route('/delete/<int:id>', methods=['DELETE'])
 def delete_user(id):
-	connection = None
+	connection = None 
 	cursor = None
 	try:
+		connection=connect()
 		cursor = connection.cursor()
 		cursor.execute("DELETE FROM tbl_user WHERE user_id=%s", (id,))
 		connection.commit()
@@ -166,9 +174,10 @@ def not_found(error=None):
     resp.status_code = 404
 
     return resp
-url = 'http://localhost:9200'
 
-es = Elasticsearch(os.getenv("ELASTIC_URL"))
+ELASTIC_URL= 'http://localhost:9200' 
+
+es = Elasticsearch(ELASTIC_URL)
 print(es.ping)
 INDEX_NAME="offre"
 def create_index(self) -> None:
@@ -215,4 +224,4 @@ def insert_Offre(request_json:dict) -> dict:
         })
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)

@@ -10,7 +10,7 @@ const httpOptions = {
 })
 export class OffreService {
 
-  private baseUrl = 'http://localhost:8000/api/v1/offres';
+  private baseUrl = 'http://localhost:5000/api/v1/offres';
 
   constructor(private http: HttpClient) { }
   getOffre(id: string): Observable<any> {
